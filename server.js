@@ -1,44 +1,16 @@
-const express = require ('express');
-const bodyParser = require("body-parser");
-var https = require('https');
+//Install express server
+const express = require('express');
+const path = require('path');
+
 const app = express();
-const cors = require('cors');
-app.use(cors({
-    origin : '*'
-}));
-app.use(bodyParser.json());
 
-app.post('/', (request,response) => {
+// Serve only the static files form the dist directory
+app.use(express.static(__dirname + '/dist/<name-of-app>'));
+
+app.get('/*', function(req,res) {
     
-    let requestBody = request.body;
-    let parameters = requestBody.parameters;
-    let appURL = getWebviewParam(parameters, 'AngularAppURL', null);
-    let callbackURL = getWebviewParam(parameters, 'webview.onDone', null);
-    let responseURL = `${appURL}?callbackURL=${callbackURL}`;
-    response.status(200).json({
-        "webview.url": responseURL
-    });
-    
+res.sendFile(path.join(__dirname+'/dist/<name-of-app>/index.html'));
 });
 
-app.post('/test', (request,response) => {
-    
-    let requestBody = request.body;
-    console.log(requestBody); 
-    response.status(200).json({"ok":200})
-});
-
-function getWebviewParam (paramArray, key, defaultValue) 
-{
-    if (paramArray)
-    {
-        let param = paramArray.find(e => {
-            return e.key === key;
-        });
-        return param ? param.value : defaultValue;
-    }
-    return defaultValue;
-}
-
-const port = process.env.PORT || 3000;
-app.listen(port);
+// Start the app by listening on the default Heroku port
+app.listen(process.env.PORT || 8080);
