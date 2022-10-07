@@ -1,5 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { CaptchaService } from './services/captcha.service';
+import {
+  CancelResponse,
+  CaptchaResponse
+} from './services/captcha.service.types';
 
 
 @Component({
@@ -9,10 +16,22 @@ import { NgForm } from '@angular/forms';
 })
 export class AppComponent {
   
-  token: string|undefined;
+  token: string;
+  callbackURL: string;
 
-  constructor() {
-    this.token = undefined;
+  constructor(
+    private route:ActivatedRoute,
+    private captchaService:CaptchaService) {
+    this.token = "";
+    this.callbackURL = "";
+  }
+
+  ngOnInit() {
+    this.route.queryParams
+    .subscribe(params => {
+      this.callbackURL = params.callbackURL;
+      this.captchaService.setcallbackURL(this.callbackURL);
+    });
   }
 
   public send(form: NgForm): void {
@@ -23,7 +42,20 @@ export class AppComponent {
       return;
     }
 
-    console.debug(`Token [${this.token}] generated`);
+    let response: CaptchaResponse = {status:"success",token:this.token};
+    this.captchaService.sendResponse(response).subscribe();
   }
+
+  public cancel():void {
+    let response: CancelResponse = {status:"cancel"};
+    this.captchaService.sendResponse(response).subscribe({
+      next:(response: any) => {
+        window.open('','_self',''); window.close();
+      }
+      
+    });
+  }
+
+  
   
 }
